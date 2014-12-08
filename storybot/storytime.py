@@ -3,8 +3,7 @@
 # A room is a specific place you can be in the story, like a forest or a room in a dungeon.
 # it can also be used to represent a state of being, not just a physical location.
 # We start out with a few "special" rooms that will be used to start and end the game.
-rooms = {'START':   ['Welcome!', {'':'Welcome'}],
-         'Welcome': ['It is very dark. You are likely to be eaten by a grue.', {'torch':'WIN', 'north':'DEATH'}],
+rooms = {'START':   ['It is very dark. You are likely to be eaten by a grue.', {'torch':'WIN', 'north':'DEATH'}],
          'DEATH':   ['You have died! better luck next time.', {}],
          'WIN':     ['You win! Congratulations', {}]}
 
@@ -13,11 +12,23 @@ specialNames = ['START', 'DEATH', 'WIN']
 
 currentRoom = 'START' # start at the beginning!
 
+prevRoom = None  # previous room, if any
+prevPath = None  # previous path, if any
+
+playing = False  #Whether we are currently in the middle of playing a game 
 
 def reset():
   # reset the game by moving back to the start.
+  global currentRoom, prevRoom, prevPath, playing
   currentRoom = 'START'
-  takePath('')  # this is weird but it is 3 AM
+  prevRoom = None
+  prevPath = None
+  playing = True
+
+
+def stop():
+  global playing
+  playing  = False
 
 
 def roomExists(name):
@@ -71,17 +82,28 @@ def getCurrentDesc():
     return desc
   else:
     return None
-  
+
+def goToRoom(roomName):
+  # go to a specific room; handle room logic like ending the game.
+  # TODO: move room existence check here?
+  global currentRoom
+  currentRoom = roomName
+  if currentRoom in ['WIN','DEATH']:
+    stop()
   
 def takePath(inputText):
   # Change current room based on the input text, by matching it to one of the paths out of the room.
   # Return True if took path successfully, False otherwise.
   # TODO: special case somewhere for trying to take existing path to non-existing room.
-  global currentRoom
+  global currentRoom, prevPath, prevRoom
+  # record previous path and room regardless of whether the attempt to move succeeded
+  prevPath = inputText
+  prevRoom = currentRoom
+  # try to move
   if currentRoom in rooms:
     paths = rooms[currentRoom][1]  # paths from this room
     if inputText in paths:
-      currentRoom = paths[inputText]
+      goToRoom( paths[inputText] )
       return True
     else:
       return False  # no such path

@@ -131,32 +131,28 @@ def parrotBack(userName, message):
 ### Parameters and functions for the story ###
 
 
-storyPlaying = False  # whether we are currently in the middle of playing a story. TODO: keep within story?
 storyPaused = False  # whether we paused the story to make changes to it
-prevRoom = None  # TODO: keep within story?
-prevPath = None  # TODO: keep within story?
 newRoomName = None  # a new room that's being made by a player
 
 
 def changePath(userName, newroom):
   # change the path from prevRoom through prevPath to lead to roomname
   global newRoomName, storyPaused
-  storytime.addPath(prevRoom, newroom, prevPath, True)
+  storytime.addPath(storytime.prevRoom, newroom, storytime.prevPath, True)
   if not newroom in storytime.rooms:
     newRoomName = newroom
     awaitResponse(userName, newroom + " doesn't exist yet! what do you want its description to be?", makeRoom)
   else:
-    storytime.currentRoom = newroom
-    # TODO: consolidate logic for 'if at end room, game over' in one place.
+    storytime.goToRoom(newroom)
     # TODO: also consolidate 'unpause game'?
     sendMsg(storytime.getCurrentDesc())
     storyPaused = False # unpause story
     
 
 def makeRoom(userName, newdesc):
-  global storyPaused
+  global newRoomName, storyPaused
   storytime.addRoom(newRoomName, newdesc)
-  storytime.currentRoom = newRoomName
+  storytime.goToRoom(newRoomName)
   sendMsg(storytime.getCurrentDesc())
   storyPaused = False
 
@@ -189,19 +185,18 @@ def processInput(text):
   processResponse(text)
   
   
-  global storyPlaying, storyPaused, prevPath, prevRoom
+  global storyPaused
   # respond to message as needed:
   if message == "storytime!":
-    if storyPlaying:
+    if storytime.playing:
       sendMsg("But we are already in a story!")
     else:
-      storyPlaying = True
       storytime.reset()
       sendMsg("OK, storytime!")
       sendMsg("Start your message with '>' if it's an instruction for the story.")
       sendMsg(storytime.getCurrentDesc())
       
-  elif storyPlaying and message.startswith(">"): # story directions need to start with a special character
+  elif storytime.playing and message.startswith(">"): # story directions need to start with a special character
     path = message[1:].strip()
     room = storytime.currentRoom
     if path == "look":
@@ -209,23 +204,17 @@ def processInput(text):
     elif storyPaused:
       sendMsg("Shh, we\'re waiting on a story change")
     else:
-      # save previous room/path for editing:
-      prevRoom = room
-      prevPath = path
       if storytime.takePath(path): # try to take the indicated path
         # if you took the path:
         sendMsg(storytime.getCurrentDesc())
-        # check if we need to go back:
-        if storytime.currentRoom in ['DEATH', 'WIN']:
-          storyPlaying = False
       else:
-        # if that fails:
+        # if taking the path fails:
         sendMsg("Sorry, I don't know how to "+path)
         
-  elif message == "No! D:":
-    if prevPath and prevRoom:
+  elif message == "No! D:" and not storyPaused:
+    if storytime.prevPath and storytime.prevRoom:
       storyPaused = True
-      awaitResponse(userName, 'OK, where do you go instead when you go '+prevPath+' from '+prevRoom+'?', changePath)
+      awaitResponse(userName, 'OK, where do you go instead when you go '+storytime.prevPath+' from '+storytime.prevRoom+'?', changePath)
     else:
       sendMsg("We didn't go anywhere yet!")
       
