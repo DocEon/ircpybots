@@ -3,7 +3,16 @@
 # A room is a specific place you can be in the story, like a forest or a room in a dungeon.
 # it can also be used to represent a state of being, not just a physical location.
 # We start out with a few "special" rooms that will be used to start and end the game.
-rooms = {'START':   ['It is very dark. You are likely to be eaten by a grue.', {'torch':'WIN', 'north':'DEATH'}],
+rooms = {'START':   ['Welcome to ACTION CASTLE! please say "start" to start the game', {'start':'Cottage'}],
+         'Cottage': ['You are standing in a small cottage. There was a *fishing pole* here once but since'+
+                     ' this game doesnt have an inventory system, lets pretend you already took it.'+
+                     ' Exits are: Out', {'Out': 'Garden Path'}],
+         'Garden Path': ['You are standing on a lush garden path. There is a cottage here. Exits are: North, South, In.', 
+                         {'In':'Cottage', 'North':'Winding Path', 'South':'Fishing Pond'}],
+         'Fishing Pond': ['You are at the edge of a small fishing pond. There used to be fish here. But you cant catch any because you have no inventory. Exits are: North', {'North': 'Garden Path'}],
+         'Winding Path': ['You are walking along a winding path. There is a tall tree here. Exits are: South, East, Up', {'South': 'Garden Path', 'East': 'Drawbridge', 'Up': 'Treetop'}],
+         'Treetop': ['You are at the top of the tall tree. There is a stout, dead branch here. But you cant have it. Sorry. Exits are: Down', {'Down':'Winding Path'}],
+         'Drawbridge': ['You are standing on one side of a drawbridge leading to ACTION CASTLE. There is a mean troll here. Exits are: West, East(Blocked). Try also Hitting the Troll or Giving the Fish (that you dont have in your nonexistent inventory)', {'West':'Winding Path', 'Hit Troll': 'DEATH', 'Give Fish': 'WIN'}],
          'DEATH':   ['You have died! better luck next time.', {}],
          'WIN':     ['You win! Congratulations', {}]}
 
